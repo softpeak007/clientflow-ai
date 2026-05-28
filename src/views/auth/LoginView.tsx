@@ -168,34 +168,49 @@ export default function LoginView() {
             className="text-left"
           >
             {error === 'unauthorized-domain' ? (
-              <div className="p-5 bg-blue-50/85 rounded-2xl border border-blue-200 text-xs text-slate-700 space-y-3 leading-relaxed">
-                <div className="flex items-center gap-2.5 text-blue-800 font-bold text-sm">
-                  <ShieldAlert className="w-5 h-5 text-blue-650 shrink-0" />
-                  <span>Authorize App Domains in Firebase</span>
+              <div className="p-5 bg-orange-50/95 rounded-2xl border border-orange-200 text-xs text-slate-700 space-y-3.5 leading-relaxed">
+                <div className="flex items-center gap-2.5 text-orange-850 font-bold text-sm">
+                  <ShieldAlert className="w-5 h-5 text-orange-600 shrink-0" />
+                  <span>Authorize Preview Domains in Firebase Console</span>
                 </div>
                 <div className="space-y-2 mt-2">
-                  <p className="font-medium text-slate-600">
-                    Firebase has rejected authentication because this preview domain is not authorized in your project settings yet.
+                  <p className="font-semibold text-slate-705 leading-normal">
+                    <span className="text-orange-900 font-bold">⚠️ Google Sign-In Problem:</span> Firebase authentication is currently rejecting logins because this preview domain is not whitelisted in your Firebase configuration settings yet.
                   </p>
-                  <p className="font-bold text-slate-800">To authorize this domain in seconds:</p>
-                  <ol className="list-decimal pl-5 space-y-1 my-1 font-medium text-slate-600">
-                    <li>Go to your <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-bold">Firebase Console</a>.</li>
-                    <li>Navigate to <strong>Authentication</strong> &rarr; <strong>Settings</strong> tab &rarr; <strong>Authorized domains</strong>.</li>
-                    <li>Click <strong>Add domain</strong> and whitelist these preview URLs:</li>
-                  </ol>
-                  <div className="bg-white p-2.5 rounded-xl font-mono text-[9px] text-slate-700 space-y-1 select-all border border-slate-200">
+                  
+                  <div className="p-3 bg-white/80 rounded-xl border border-orange-100 text-slate-650 space-y-1.5 font-medium">
+                    <p className="text-slate-800 font-bold">🛠️ How to fix in 10 seconds (Aise thhek karein):</p>
+                    <ol className="list-decimal pl-4 space-y-1 text-[11px]">
+                      <li>Open your <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-bold">Firebase Console</a></li>
+                      <li>Go to <strong>Authentication</strong> &rarr; <strong>Settings</strong> tab &rarr; <strong>Authorized domains</strong></li>
+                      <li>Click <strong>Add domain</strong> and add these two URLs:</li>
+                    </ol>
+                  </div>
+
+                  <div className="bg-white p-2.5 rounded-xl font-mono text-[9px] text-slate-700 space-y-1 select-all border border-orange-150">
                     <p>ais-dev-52t4knnnizapo2vm3hsei3-826788053675.asia-southeast1.run.app</p>
                     <p>ais-pre-52t4knnnizapo2vm3hsei3-826788053675.asia-southeast1.run.app</p>
                   </div>
-                  <div className="pt-2 text-slate-500 text-[10px] leading-normal">
-                    💡 <strong>Quick Fallback:</strong> You can click the buttons in the <strong>Demo Mode</strong> panel below to log in instantly and mock firestore calls while whitelisting is loading!
+
+                  <div className="border-t border-orange-150 pt-2.5 mt-2 space-y-2">
+                    <p className="text-slate-600 font-bold text-[10.5px]">
+                      💡 Instant Bypass (Bina update kiye login karne ke liye upar/neeche Demo use karein):
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => handleDemoClick('admin')}
+                      className="w-full py-2.5 px-4 bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-2"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      Instant Bypass Mode: Log In as Demo Freelancer
+                    </button>
                   </div>
                 </div>
                 <button 
                   onClick={() => setError(null)} 
-                  className="mt-3 text-[10px] text-blue-600 font-bold hover:underline"
+                  className="mt-1 text-[10px] text-slate-550 font-bold hover:underline block"
                 >
-                  Dismiss error
+                  Dismiss warning
                 </button>
               </div>
             ) : (
