@@ -1,0 +1,118 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Admin escape hatch (Freelancer) - using the provided email
+    function isFreelancer() {
+      return isSignedIn() && (
+        request.auth.token.email == 'giofrt7@gmail.com' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
+    // --- Collections ---
+
+    // Users
+    match /users/{userId} {
+      function isValidUser(data) {
+        return data.uid is string && data.email is string && 
+               data.role in ['admin', 'client'] &&
+               data.keys().hasAll(['uid', 'email', 'role', 'displayName', 'createdAt']) &&
+               data.keys().size() == 5;
+      }
+
+      allow get: if isOwner(userId) || isFreelancer();
+      allow list: if isFreelancer();
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidUser(incoming()) && 
+                    incoming().role == existing().role; // Cannot change role
+    }
+
+    // Clients
+    match /clients/{clientId} {
+      function isValidClient(data) {
+        return data.id is string && data.name is string && data.email is string &&
+               data.adminId == request.auth.uid &&
+               data.keys().hasAll(['id', 'name', 'email', 'adminId']) &&
+               data.keys().size() >= 4;
+      }
+
+      allow read: if isFreelancer() && existing().adminId == request.auth.uid;
+      allow create: if isFreelancer() && isValidClient(incoming());
+      allow update: if isFreelancer() && existing().adminId == request.auth.uid && isValidClient(incoming());
+      allow delete: if isFreelancer() && existing().adminId == request.auth.uid;
+    }
+
+    // Projects (Master Gate)
+    match /projects/{projectId} {
+      function isValidProject(data) {
+        return data.id is string && data.name is string && 
+               data.status in ['active', 'completed', 'on-hold'] &&
+               data.clientId is string &&
+               data.adminId == request.auth.uid;
+      }
+
+      function isProjectMember() {
+        return isSignedIn() && (
+          existing().adminId == request.auth.uid || 
+          existing().clientId == request.auth.uid
+        );
+      }
+
+      allow read: if isProjectMember();
+      allow create: if isFreelancer() && isValidProject(incoming());
+      allow update: if isFreelancer() && existing().adminId == request.auth.uid && isValidProject(incoming());
+      allow delete: if isFreelancer() && existing().adminId == request.auth.uid;
+
+      // Sub-collections inherit project visibility
+      match /invoices/{invoiceId} {
+        allow read: if isProjectMember();
+        allow write: if isFreelancer() && get(/databases/$(database)/documents/projects/$(projectId)).data.adminId == request.auth.uid;
+      }
+
+      match /files/{fileId} {
+        allow read: if isProjectMember();
+        allow write: if isProjectMember(); // Both can upload files
+      }
+
+      match /messages/{messageId} {
+        allow read: if isProjectMember();
+        allow create: if isProjectMember() && incoming().senderId == request.auth.uid;
+      }
+    }
+
+    // Notifications
+    match /users/{userId}/notifications/{notificationId} {
+      allow read, write: if isOwner(userId);
+    }
+  }
+}

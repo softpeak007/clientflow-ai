@@ -1,0 +1,6 @@
+{
+  "name": "ClientFlow",
+  "description": "A professional client portal for freelancers to manage clients, files, invoices, and project updates.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
