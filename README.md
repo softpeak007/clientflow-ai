@@ -1,147 +1,20 @@
-# 🚀 ClientFlow AI
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
+</div>
 
-### Premium AI-Powered Client Operating System
+# Run and deploy your AI Studio app
 
-ClientFlow AI is a modern, production-ready SaaS platform built for freelancers, agencies, consultants, and digital teams.
+This contains everything you need to run your app locally.
 
-Manage clients, invoices, projects, files, communication, and workflows from one powerful and beautifully designed workspace.
+View your app in AI Studio: https://ai.studio/apps/5c54d7c8-b8e1-4896-9241-ea619b27ff77
 
----
+## Run Locally
 
-# 🌍 Live Demo
+**Prerequisites:**  Node.js
 
-👉 https://clientflow-ai-ruddy.vercel.app/
 
----
-
-# ✨ Core Features
-
-## 🔐 Authentication
-
-* Firebase Authentication
-* Secure Login & Signup
-* Persistent Sessions
-* Protected Dashboard Access
-
-## 👥 Client CRM
-
-* Client Management System
-* Activity Tracking
-* Revenue Insights
-* Client Profiles & Workspaces
-
-## 📁 File Management
-
-* Secure File Uploads
-* Firebase Storage Integration
-* File Organization
-* Version Tracking
-
-## 💳 Invoice System
-
-* Professional Invoice Generator
-* PDF Export Support
-* Invoice Status Tracking
-* Payment Workflow Management
-
-## 📊 Project Dashboard
-
-* Task & Milestone Tracking
-* Project Progress Updates
-* Workspace Collaboration
-* Timeline Monitoring
-
-## 💬 Collaboration Tools
-
-* Real-time Style Messaging
-* Notification Center
-* Team & Client Communication
-
-## 🎨 Premium SaaS UI
-
-* Bento Grid Layout
-* Responsive Dashboard
-* Modern Glassmorphism Design
-* Smooth Animations
-* Mobile Optimized Interface
-
----
-
-# 🛠️ Tech Stack
-
-* React
-* TypeScript
-* Vite
-* TailwindCSS
-* Firebase Authentication
-* Firestore Database
-* Firebase Storage
-* Vercel Deployment
-
----
-
-# 🔥 Firebase Configuration
-
-Configure these environment variables before deployment:
-
-```env
-VITE_FIREBASE_API_KEY=
-VITE_FIREBASE_AUTH_DOMAIN=
-VITE_FIREBASE_PROJECT_ID=
-VITE_FIREBASE_STORAGE_BUCKET=
-VITE_FIREBASE_MESSAGING_SENDER_ID=
-VITE_FIREBASE_APP_ID=
-GEMINI_API_KEY=
-```
-
----
-
-# 🚀 Deployment
-
-ClientFlow AI is optimized for deployment on:
-
-* Vercel
-* Firebase Hosting
-* Netlify
-
-After deployment, add your production domain inside:
-
-```txt
-Firebase Console → Authentication → Settings → Authorized Domains
-```
-
-Example:
-
-```txt
-clientflow-ai-ruddy.vercel.app
-```
-
----
-
-# ✅ Production Ready
-
-* Firebase Authentication Integrated
-* Firestore Database Connected
-* Firebase Storage Connected
-* Protected Routes Enabled
-* Responsive UI Verified
-* Environment Variables Configured
-* Production Build Validated
-
----
-
-# 🎯 Built For
-
-* Freelancers
-* Agencies
-* Consultants
-* Designers
-* Developers
-* Startup Teams
-* Digital Service Businesses
-
----
-
-# 📄 License
-
-Private / Internal Project
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
