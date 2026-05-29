@@ -30,7 +30,11 @@ export default function ProjectsView() {
     : [where('clientId', '==', user.uid)];
 
   const { data: projects, loading } = useCollection<Project>('projects', constraints);
-  const { data: clients } = useCollection<Client>('clients', [where('adminId', '==', user?.uid || '')]);
+
+  const clientsConstraints = user?.role === 'admin'
+    ? [where('adminId', '==', user.uid)]
+    : [where('adminId', '==', 'NONE')];
+  const { data: clients } = useCollection<Client>('clients', clientsConstraints);
 
   const [newProject, setNewProject] = useState({
     name: '',

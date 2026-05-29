@@ -19,26 +19,43 @@ import { Folder } from 'lucide-react';
 
 export default function DashboardView() {
   const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+  const myUid = user?.uid || 'NONE';
+
+  // Dynamic role-aware query constraints to minimize Firestore reads
+  const clientsConstraints = [where('adminId', '==', isAdmin ? myUid : 'NONE')];
+  const adminProjectsConstraints = [where('adminId', '==', isAdmin ? myUid : 'NONE')];
+  const clientProjectsConstraints = [where('clientId', '==', !isAdmin ? myUid : 'NONE')];
+  
+  const invoicesConstraints = isAdmin 
+    ? [where('adminId', '==', myUid)] 
+    : [where('clientId', '==', myUid)];
+    
+  const filesConstraints = isAdmin 
+    ? [where('adminId', '==', myUid)] 
+    : [where('clientId', '==', myUid)];
   
   // Queries with loading states
-  const { data: clients, loading: clientsLoading, error: clientsError } = useCollection<Client>('clients', [
-    where('adminId', '==', user?.uid || '')
-  ]);
+  const { data: clients, loading: clientsLoading, error: clientsError } = useCollection<Client>('clients', clientsConstraints);
+  const { data: adminProjects, loading: adminProjLoading, error: adminProjError } = useCollection<Project>('projects', adminProjectsConstraints);
+  const { data: clientProjects, loading: clientProjLoading, error: clientProjError } = useCollection<Project>('projects', clientProjectsConstraints);
+  const { data: invoices, loading: invoicesLoading, error: invoicesError } = useCollection<Invoice>('invoices', invoicesConstraints, true);
+  const { data: files, loading: filesLoading, error: filesError } = useCollection<FileMetadata>('files', filesConstraints, true);
 
-  const { data: adminProjects, loading: adminProjLoading, error: adminProjError } = useCollection<Project>('projects', [
-    where('adminId', '==', user?.uid || '')
-  ]);
+  const projects = isAdmin ? adminProjects : clientProjects;
+  
+  // Skip evaluations of non-relevant queries to accelerate startup
+  const clientsLoadingToCheck = isAdmin ? clientsLoading : false;
+  const adminProjLoadingToCheck = isAdmin ? adminProjLoading : false;
+  const clientProjLoadingToCheck = !isAdmin ? clientProjLoading : false;
 
-  const { data: clientProjects, loading: clientProjLoading, error: clientProjError } = useCollection<Project>('projects', [
-    where('clientId', '==', user?.uid || '')
-  ]);
+  const isLoading = clientsLoadingToCheck || adminProjLoadingToCheck || clientProjLoadingToCheck || invoicesLoading || filesLoading;
+  
+  const clientsErrorToCheck = isAdmin ? clientsError : null;
+  const adminProjErrorToCheck = isAdmin ? adminProjError : null;
+  const clientProjErrorToCheck = !isAdmin ? clientProjError : null;
 
-  const { data: invoices, loading: invoicesLoading, error: invoicesError } = useCollection<Invoice>('invoices', [], true);
-  const { data: files, loading: filesLoading, error: filesError } = useCollection<FileMetadata>('files', [], true);
-
-  const projects = user?.role === 'admin' ? adminProjects : clientProjects;
-  const isLoading = clientsLoading || adminProjLoading || clientProjLoading || invoicesLoading || filesLoading;
-  const connectionError = clientsError || adminProjError || clientProjError || invoicesError || filesError;
+  const connectionError = clientsErrorToCheck || adminProjErrorToCheck || clientProjErrorToCheck || invoicesError || filesError;
 
   // Real Stats calculation
   const stats = [

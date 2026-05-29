@@ -4,8 +4,6 @@ import { formatCurrency, cn } from '../../lib/utils';
 import { format } from 'date-fns';
 import { Printer, X, Plus, Trash2, Edit3, Check, Palette, FileSpreadsheet, Share2, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
 
 interface InvoicePrintPreviewProps {
   invoice: Invoice;
@@ -124,6 +122,13 @@ export default function InvoicePrintPreview({
 
     setIsDownloading(true);
     try {
+      const [html2canvasModule, jspdfModule] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf')
+      ]);
+      const html2canvas = html2canvasModule.default;
+      const jsPDF = jspdfModule.jsPDF;
+
       const canvas = await html2canvas(element, {
         scale: 2, // Capture at double resolution for crisp text/borders
         useCORS: true,

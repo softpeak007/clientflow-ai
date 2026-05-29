@@ -16,9 +16,19 @@ export default function InvoicesView() {
   const [selectedPrintInvoice, setSelectedPrintInvoice] = useState<Invoice | null>(null);
   const [autoDownload, setAutoDownload] = useState(false);
   
-  const { data: invoices, loading } = useCollection<Invoice>('invoices', [], true);
-  const { data: clients } = useCollection<Client>('clients', [where('adminId', '==', user?.uid || '')]);
-  const { data: projects } = useCollection<Project>('projects', [where('adminId', '==', user?.uid || '')]);
+  const isAdmin = user?.role === 'admin';
+  const myUid = user?.uid || 'NONE';
+
+  const invoicesConstraints = isAdmin
+    ? [where('adminId', '==', myUid)]
+    : [where('clientId', '==', myUid)];
+
+  const clientsConstraints = [where('adminId', '==', isAdmin ? myUid : 'NONE')];
+  const projectsConstraints = [where('adminId', '==', isAdmin ? myUid : 'NONE')];
+
+  const { data: invoices, loading } = useCollection<Invoice>('invoices', invoicesConstraints, true);
+  const { data: clients } = useCollection<Client>('clients', clientsConstraints);
+  const { data: projects } = useCollection<Project>('projects', projectsConstraints);
 
   const [newInvoice, setNewInvoice] = useState({
     clientId: '',
@@ -41,6 +51,7 @@ export default function InvoicesView() {
           status: 'draft',
           dueDate: new Date(newInvoice.dueDate).toISOString(),
           createdAt: new Date().toISOString(),
+          adminId: user?.uid || 'demo-admin-id'
         });
       } else {
         await addDoc(collection(db, `projects/${newInvoice.projectId}/invoices`), {
@@ -51,6 +62,7 @@ export default function InvoicesView() {
           status: 'draft',
           dueDate: new Date(newInvoice.dueDate).toISOString(),
           createdAt: new Date().toISOString(),
+          adminId: user?.uid
         });
       }
       setIsModalOpen(false);

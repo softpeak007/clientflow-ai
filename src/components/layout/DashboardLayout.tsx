@@ -23,7 +23,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user, signOut } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const { data: notifications } = useCollection<Notification>('notifications');
+  const { data: notifications } = useCollection<Notification>(user?.uid ? `users/${user.uid}/notifications` : 'notifications');
   const navigate = useNavigate();
 
   const handleSignOut = async () => {

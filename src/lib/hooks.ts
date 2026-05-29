@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { 
   collection, 
   query, 
-  where, 
   onSnapshot, 
   QueryConstraint,
   DocumentData,
@@ -11,17 +10,71 @@ import {
 import { db, handleFirestoreError, OperationType } from './firebase';
 import { getSandboxDB } from './sandbox';
 
+// Generate a light, bulletproof primitive key from Firestore QueryConstraints to prevent infinite resubscribes
+function getConstraintsKey(constraints: QueryConstraint[]): string {
+  try {
+    return constraints.map(c => {
+      if (!c) return '';
+      const raw = c as any;
+      const type = raw.type || '';
+      const field = raw.fieldPath || (raw._field && String(raw._field)) || '';
+      const op = raw.opStr || raw._operator || '';
+      const val = raw.value !== undefined ? String(raw.value) : (raw._value !== undefined ? String(raw._value) : '');
+      return `${type}:${field}:${op}:${val}`;
+    }).join('|');
+  } catch (err) {
+    return String(constraints.length);
+  }
+}
+
+// Global caching system (Stale-While-Revalidate memory store)
+const collectionCache: Record<string, any[]> = {};
+const cacheListeners: Record<string, Set<(data: any[]) => void>> = {};
+
+function subscribeToCache(key: string, listener: (data: any[]) => void) {
+  if (!cacheListeners[key]) {
+    cacheListeners[key] = new Set();
+  }
+  cacheListeners[key].add(listener);
+  return () => {
+    cacheListeners[key].delete(listener);
+    if (cacheListeners[key].size === 0) {
+      delete cacheListeners[key];
+    }
+  };
+}
+
+function updateCache(key: string, data: any[]) {
+  collectionCache[key] = data;
+  if (cacheListeners[key]) {
+    cacheListeners[key].forEach(listener => listener(data));
+  }
+}
+
 export function useCollection<T = DocumentData>(
   path: string, 
   constraints: QueryConstraint[] = [],
   isCollectionGroup = false
 ) {
-  const [data, setData] = useState<T[]>([]);
-  const [loading, setLoading] = useState(true);
+  const constraintsKey = getConstraintsKey(constraints);
+  const cacheKey = `${path}:${constraintsKey}:${isCollectionGroup}`;
+
+  // Initialize from cache if possible, providing instant interactivity (0ms load perception)
+  const initialData = (collectionCache[cacheKey] || []) as T[];
+  const initialLoading = !collectionCache[cacheKey]; // only show loading on first fetch
+
+  const [data, setData] = useState<T[]>(initialData);
+  const [loading, setLoading] = useState(initialLoading);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // If in Demo Mode (sandbox is active)
+    // Sync React state if cache updates in background (from other subscriptions)
+    const unsubscribeCache = subscribeToCache(cacheKey, (newData) => {
+      setData(newData as T[]);
+      setLoading(false);
+    });
+
+    // If client is in demo/sandbox mode
     if (localStorage.getItem('demo_user')) {
       const loadDemoData = () => {
         const sdb = getSandboxDB();
@@ -41,7 +94,7 @@ export function useCollection<T = DocumentData>(
           } else {
             results = results.filter((item: any) => item.clientId === uid);
           }
-        } else if (path === 'invoices') {
+        } else if (path === 'invoices' || path.includes('invoices')) {
           results = sdb.invoices as unknown as T[];
           if (role === 'client') {
             results = results.filter((item: any) => item.clientId === uid);
@@ -50,7 +103,7 @@ export function useCollection<T = DocumentData>(
             const myProjectIds = sdb.projects.filter((p: any) => p.adminId === uid).map((p: any) => p.id);
             results = results.filter((item: any) => myProjectIds.includes(item.projectId));
           }
-        } else if (path.includes('messages')) {
+        } else if (path === 'messages' || path.includes('messages')) {
           results = sdb.messages as unknown as T[];
           const projectIdMatch = path.match(/projects\/([^\/]+)\/messages/);
           if (projectIdMatch) {
@@ -71,7 +124,7 @@ export function useCollection<T = DocumentData>(
               results = results.filter((item: any) => myProjectIds.includes(item.projectId));
             }
           }
-        } else if (path === 'notifications') {
+        } else if (path === 'notifications' || path.includes('notifications')) {
           results = (sdb.notifications || []) as unknown as T[];
           results = results.filter((item: any) => item.userId === uid);
         }
@@ -83,37 +136,38 @@ export function useCollection<T = DocumentData>(
           results.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         }
 
-        setData(results);
-        setLoading(false);
+        updateCache(cacheKey, results);
       };
 
       loadDemoData();
       window.addEventListener('sandbox_update', loadDemoData);
       return () => {
+        unsubscribeCache();
         window.removeEventListener('sandbox_update', loadDemoData);
       };
     }
 
-    setLoading(true);
+    setLoading(!collectionCache[cacheKey]); // reset loading if we don't have cached data yet
     const ref = isCollectionGroup ? collectionGroup(db, path) : collection(db, path);
     const q = query(ref, ...constraints);
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribeFirestore = onSnapshot(q, (snapshot) => {
       const results = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as T[];
-      setData(results);
-      setLoading(false);
+      updateCache(cacheKey, results);
     }, (err) => {
       setError(err);
       setLoading(false);
       handleFirestoreError(err, OperationType.LIST, path);
     });
 
-    return () => unsubscribe();
-  }, [path, JSON.stringify(constraints), isCollectionGroup]);
+    return () => {
+      unsubscribeCache();
+      unsubscribeFirestore();
+    };
+  }, [path, constraintsKey, isCollectionGroup]);
 
   return { data, loading, error };
 }
-

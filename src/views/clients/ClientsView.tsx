@@ -41,7 +41,7 @@ export default function ClientsView() {
   
   const { data: clients, loading } = useCollection<Client>('clients', [where('adminId', '==', user?.uid || '')]);
   const { data: projects } = useCollection<Project>('projects', [where('adminId', '==', user?.uid || '')]);
-  const { data: invoices } = useCollection<Invoice>('invoices', [], true);
+  const { data: invoices } = useCollection<Invoice>('invoices', [where('adminId', '==', user?.uid || '')], true);
 
   const [newClient, setNewClient] = useState({
     name: '',

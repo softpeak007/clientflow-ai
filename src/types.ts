@@ -41,6 +41,7 @@ export interface Invoice {
   status: 'draft' | 'sent' | 'paid' | 'overdue';
   dueDate: string;
   createdAt: string;
+  adminId?: string;
 }
 
 export interface FileMetadata {
@@ -53,6 +54,7 @@ export interface FileMetadata {
   type: string;
   uploadedById: string;
   createdAt: string;
+  adminId?: string;
 }
 
 export interface Message {
