@@ -14,6 +14,7 @@ export default function InvoicesView() {
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPrintInvoice, setSelectedPrintInvoice] = useState<Invoice | null>(null);
+  const [autoDownload, setAutoDownload] = useState(false);
   
   const { data: invoices, loading } = useCollection<Invoice>('invoices', [], true);
   const { data: clients } = useCollection<Client>('clients', [where('adminId', '==', user?.uid || '')]);
@@ -134,14 +135,20 @@ export default function InvoicesView() {
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button 
-                        onClick={() => setSelectedPrintInvoice(invoice)}
+                        onClick={() => {
+                          setAutoDownload(false);
+                          setSelectedPrintInvoice(invoice);
+                        }}
                         className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         title="Print / Share PDF"
                       >
                         <Printer className="w-4 h-4" />
                       </button>
                       <button 
-                        onClick={() => setSelectedPrintInvoice(invoice)}
+                        onClick={() => {
+                          setAutoDownload(true);
+                          setSelectedPrintInvoice(invoice);
+                        }}
                         className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         title="Download Document"
                       >
@@ -228,7 +235,11 @@ export default function InvoicesView() {
           project={projects.find(p => p.id === selectedPrintInvoice.projectId)}
           client={clients.find(c => c.id === selectedPrintInvoice.clientId)}
           user={user}
-          onClose={() => setSelectedPrintInvoice(null)}
+          onClose={() => {
+            setSelectedPrintInvoice(null);
+            setAutoDownload(false);
+          }}
+          autoDownload={autoDownload}
         />
       )}
     </div>

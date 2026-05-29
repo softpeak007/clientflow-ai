@@ -15,6 +15,10 @@ export interface Client {
   company: string;
   adminId: string;
   avatarUrl?: string;
+  stage?: 'lead' | 'proposal' | 'negotiation' | 'active' | 'lost';
+  phone?: string;
+  notes?: string;
+  nextFollowUp?: string;
 }
 
 export interface Project {

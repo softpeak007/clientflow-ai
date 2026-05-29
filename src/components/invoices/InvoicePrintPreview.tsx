@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Invoice, Client, Project, User } from '../../types';
 import { formatCurrency, cn } from '../../lib/utils';
 import { format } from 'date-fns';
-import { Printer, X, Plus, Trash2, Edit3, Check, Palette, FileSpreadsheet, Share2 } from 'lucide-react';
+import { Printer, X, Plus, Trash2, Edit3, Check, Palette, FileSpreadsheet, Share2, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface InvoicePrintPreviewProps {
   invoice: Invoice;
@@ -11,6 +13,7 @@ interface InvoicePrintPreviewProps {
   client?: Client;
   user: User | null;
   onClose: () => void;
+  autoDownload?: boolean;
 }
 
 interface InvoiceItem {
@@ -25,7 +28,8 @@ export default function InvoicePrintPreview({
   project,
   client,
   user,
-  onClose
+  onClose,
+  autoDownload = false
 }: InvoicePrintPreviewProps) {
   // Geometric Balance Accents
   const themes = [
@@ -110,6 +114,58 @@ export default function InvoicePrintPreview({
   const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
   const taxAmount = (subtotal * taxRate) / 100;
   const grandTotal = subtotal + taxAmount;
+
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [hasAutoDownloaded, setHasAutoDownloaded] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    const element = document.getElementById('invoice-print-paper');
+    if (!element) return;
+
+    setIsDownloading(true);
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 2, // Capture at double resolution for crisp text/borders
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`invoice-${invoice.id.slice(0, 8).toUpperCase()}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (autoDownload && items.length > 0 && !isDownloading && !hasAutoDownloaded) {
+      setHasAutoDownloaded(true);
+      const timer = setTimeout(() => {
+        handleDownloadPDF();
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [autoDownload, items, hasAutoDownloaded]);
 
   const handleTriggerPrint = () => {
     window.print();
@@ -309,6 +365,24 @@ export default function InvoicePrintPreview({
 
         {/* Bottom Actions */}
         <div className="space-y-3 pt-4 border-t border-slate-100">
+          <button
+            onClick={handleDownloadPDF}
+            disabled={isDownloading}
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-all transform hover:-translate-y-0.5 disabled:cursor-not-allowed cursor-pointer"
+          >
+            {isDownloading ? (
+              <span className="flex items-center gap-2">
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                Generating PDF...
+              </span>
+            ) : (
+              <>
+                <Download className="w-4 h-4" />
+                Download PDF
+              </>
+            )}
+          </button>
+
           <button
             onClick={handleTriggerPrint}
             className={cn(
