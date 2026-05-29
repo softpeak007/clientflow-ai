@@ -11,6 +11,7 @@ const config = {
   storageBucket: (import.meta as any).env.VITE_FIREBASE_STORAGE_BUCKET || firebaseConfig.storageBucket || '',
   messagingSenderId: (import.meta as any).env.VITE_FIREBASE_MESSAGING_SENDER_ID || firebaseConfig.messagingSenderId || '',
   appId: (import.meta as any).env.VITE_FIREBASE_APP_ID || firebaseConfig.appId || '',
+  databaseURL: (import.meta as any).env.VITE_FIREBASE_DATABASE_URL || (firebaseConfig as any).databaseURL || '',
 };
 
 const app = initializeApp(config);

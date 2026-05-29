@@ -1,10 +1,11 @@
 {
-  "projectId": "quaint-throne-5nzsc",
-  "appId": "1:866248893963:web:2a8779b68863bcd4c3890e",
-  "apiKey": "AIzaSyDKCcqvCnWajrhZJDe09nzj2CmLjPfOy4g",
-  "authDomain": "quaint-throne-5nzsc.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-5c54d7c8-b8e1-4896-9241-ea619b27ff77",
-  "storageBucket": "quaint-throne-5nzsc.firebasestorage.app",
-  "messagingSenderId": "866248893963",
+  "projectId": "clientflow-bd864",
+  "appId": "1:486410702342:web:32ad132eb4dae326cb7d87",
+  "apiKey": "AIzaSyBc2Bh3wbPTWKRAYwrizka_5jNnMx3qWjw",
+  "authDomain": "clientflow-bd864.firebaseapp.com",
+  "databaseURL": "https://clientflow-bd864-default-rtdb.asia-southeast1.firebasedatabase.app",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "clientflow-bd864.firebasestorage.app",
+  "messagingSenderId": "486410702342",
   "measurementId": ""
 }
