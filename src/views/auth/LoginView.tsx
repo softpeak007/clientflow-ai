@@ -115,6 +115,8 @@ export default function LoginView() {
         message = 'unauthorized-domain';
       } else if (err?.code === 'auth/popup-blocked') {
         message = 'The sign-in popup was blocked by your browser. Please enable popups for this site or try Demo Mode.';
+      } else if (err?.code === 'auth/popup-closed-by-user') {
+        message = 'The login window was closed. If you just added the domain in Firebase, please wait 60 seconds and refresh. Otherwise, verify the domain is exactly as shown in the warning.';
       } else if (err?.code === 'auth/web-storage-unsupported' || err?.message?.includes('storage')) {
         message = 'Third-party cookies/web storage might be blocked in this iframe. Try Quick Demo Login below!';
       } else {
@@ -188,8 +190,17 @@ export default function LoginView() {
                   </div>
 
                   <div className="bg-white p-2.5 rounded-xl font-mono text-[9px] text-slate-700 space-y-1 select-all border border-orange-150">
-                    <p>ais-dev-52t4knnnizapo2vm3hsei3-826788053675.asia-southeast1.run.app</p>
-                    <p>ais-pre-52t4knnnizapo2vm3hsei3-826788053675.asia-southeast1.run.app</p>
+                    <p className="text-slate-400 opacity-60">ais-dev-52t4knnnizapo2vm3hsei3-826788053675.asia-southeast1.run.app</p>
+                    <p className="text-slate-400 opacity-60">ais-pre-52t4knnnizapo2vm3hsei3-826788053675.asia-southeast1.run.app</p>
+                    {/* Automatically show the current hostname if it's a custom one like Vercel */}
+                    {typeof window !== 'undefined' && 
+                     window.location.hostname !== 'localhost' && 
+                     !window.location.hostname.includes('.run.app') && (
+                      <div className="mt-1 pt-1 border-t border-orange-50">
+                        <p className="text-blue-700 font-black text-xs">Copy this exact URL (Vercel/Custom):</p>
+                        <p className="text-blue-800 font-bold bg-blue-50 px-1 py-0.5 rounded">{window.location.hostname}</p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="border-t border-orange-150 pt-2.5 mt-2 space-y-2">
